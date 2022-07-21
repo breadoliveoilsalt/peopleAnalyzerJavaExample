@@ -1,5 +1,6 @@
-package tests;
+package tests.sample;
 
+import org.junit.jupiter.api.BeforeEach;
 import sample.SampleClass;
 import org.junit.Before;
 import org.junit.jupiter.api.Test;
@@ -11,7 +12,7 @@ public class SampleClassTest {
 
     private SampleClass sampleClass;
 
-    @Before
+    @BeforeEach
     public void testInit() {
         sampleClass = new SampleClass();
     }
