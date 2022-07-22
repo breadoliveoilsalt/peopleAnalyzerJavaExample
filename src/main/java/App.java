@@ -13,11 +13,9 @@ public class App {
         System.out.println("Starting People Analyzer");
         System.out.println("=========================================");
 
-//        IPeopleRepository repository = new CSVRepository();
         IPeopleRepository repository = new ObjectRepository();
         IAnalyzer analyzer = new AgeAggregator();
-//        IReporter reporter = new SystemOutputReporter();
-        IReporter reporter = new FileOutputReporter();
+        IReporter reporter = new SystemOutputReporter();
 
         new PeopleAnalyzer(
             repository,
