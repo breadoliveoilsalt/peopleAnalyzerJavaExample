@@ -5,12 +5,13 @@ import org.junit.jupiter.api.Test;
 import peopleAnalyzer.PeopleAnalyzer;
 import peopleAnalyzer.analyzers.AgeAggregator;
 import peopleAnalyzer.interfaces.IAnalyzer;
+import peopleAnalyzer.interfaces.IPeopleRepository;
 import peopleAnalyzer.interfaces.IReporter;
 import peopleAnalyzer.models.Analysis;
 import peopleAnalyzer.models.Person;
-import tests.mocks.MockAnalyzer;
-import tests.mocks.MockPeopleRepository;
-import tests.mocks.MockReporter;
+import peopleAnalyzer.reporters.SystemOutputReporter;
+import peopleAnalyzer.repositories.ObjectRepository;
+import sample.SampleClass;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -20,39 +21,78 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class PeopleAnalyzerTests {
 
-    @Test
-    public void testRunGetsAListOfPeople() throws IOException {
-        MockPeopleRepository repository = new MockPeopleRepository();
-        IAnalyzer analyzer = new MockAnalyzer();
-        IReporter reporter = new MockReporter();
-        PeopleAnalyzer app = new PeopleAnalyzer(repository, analyzer, reporter);
+    class MockPeopleRepository implements IPeopleRepository {
 
-        app.run();
+        private boolean getPeopleCalled = false;
+        private List<Person> peopleToReturn = null;
 
-        assertEquals(1, repository.getNumberOfCallsToGetPeople());
+        @Override
+        public List<Person> getPeople() {
+            getPeopleCalled = true;
+            return peopleToReturn;
+        }
+
+        public boolean wasGetPeopleCalled() {
+            return getPeopleCalled;
+        }
+
+        public void setPeopleToReturn(List<Person> people) {
+            peopleToReturn = people;
+        }
+    }
+
+    class MockAnalyzer implements IAnalyzer {
+
+        private boolean analyzeCalled = false;
+        private List<Person> argumentPassedToAnalyze;
+
+        @Override
+        public Analysis analyze(List<Person> people) {
+            analyzeCalled = true;
+            argumentPassedToAnalyze = people;
+            return new Analysis("Hello World", 420);
+        }
+
+        public boolean wasAnalyzeCalled() {
+            return analyzeCalled;
+        }
+
+        public List<Person> getArgumentPassedToAnalyze() {
+            return argumentPassedToAnalyze;
+        }
     }
 
     @Test
-    public void testRunAnalyzesThePeople() throws IOException {
-        List<Person> people = generatePeopleList();
+    public void testRunRetrievesPeopleData() throws IOException {
         MockPeopleRepository repository = new MockPeopleRepository();
+        List<Person> people = new ArrayList<Person>();
+        people.add(new Person("Felicia", 25));
+        repository.setPeopleToReturn(people);
+
+        IAnalyzer analyzer = new AgeAggregator();
+        IReporter reporter = new SystemOutputReporter();
+        PeopleAnalyzer peopleAnalyzer = new PeopleAnalyzer(repository, analyzer, reporter);
+
+        peopleAnalyzer.run();
+
+        assertEquals(true, repository.wasGetPeopleCalled());
+    }
+
+    @Test
+    public void testRunAnalyzesThePeopleRetrieved() throws IOException {
+        MockPeopleRepository repository = new MockPeopleRepository();
+        List<Person> people = new ArrayList<Person>();
+        people.add(new Person("Felicia", 25));
         repository.setPeopleToReturn(people);
 
         MockAnalyzer analyzer = new MockAnalyzer();
-        IReporter reporter = new MockReporter();
-        PeopleAnalyzer app = new PeopleAnalyzer(repository, analyzer, reporter);
+        IReporter reporter = new SystemOutputReporter();
+        PeopleAnalyzer peopleAnalyzer = new PeopleAnalyzer(repository, analyzer, reporter);
 
-        app.run();
+        peopleAnalyzer.run();
 
-        assertEquals(1, analyzer.getNumberOfCallsToAnalyze());
-        assertEquals(people, analyzer.getPeoplePassedInAsArgument());
-    }
-
-    private List<Person> generatePeopleList() {
-        List<Person> people = new ArrayList<Person>();
-        people.add(new Person("Felicia", 25));
-        people.add(new Person("Alice", 29));
-        return people;
+        assertEquals(true, analyzer.wasAnalyzeCalled());
+        assertEquals(people, analyzer.getArgumentPassedToAnalyze());
     }
 
 }

@@ -13,7 +13,8 @@ public class App {
         System.out.println("Starting People Analyzer");
         System.out.println("=========================================");
 
-        IPeopleRepository repository = new ObjectRepository();
+        IPeopleRepository repository = new CSVRepository();
+//        IPeopleRepository repository = new ObjectRepository();
         IAnalyzer analyzer = new AgeAggregator();
         IReporter reporter = new SystemOutputReporter();
 
